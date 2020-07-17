@@ -32,6 +32,11 @@ note: npx is included with npm > v5.2 or can be installed separately.
 
 npx cypress open ( I prefer this option )
 
+Also you can fire off the same tests from your terminal by running this command > npx cypress run
+example pic > https://www.dropbox.com/s/grz3uo2sb2729c1/Screenshot%202020-07-17%2014.10.49.png?dl=0
+
+(notice the videos folder in your project will be created and store all test runs so you can easily leave your computer and go for lunch while Cypress is banging on the test scenarios)
+
 I run Chrome as default , we can also set preferred browser setting in the cypress.json file or change it from the Test Runner it self see ex > https://www.dropbox.com/s/s1hma8qqrtf33c7/Screenshot%202020-07-17%2000.29.53.png?dl=0
 
 Step 4. 

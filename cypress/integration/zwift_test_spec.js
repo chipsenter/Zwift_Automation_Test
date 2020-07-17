@@ -130,7 +130,7 @@ context('Actions', () => {
     // I don't wanna submit the Test account :) let's move on
   })
 
-  it.only('Validate Events page', () => {
+  it('Validate Events page', () => {
     
     cy.get('.znv-d-lg-flex > [href="/events"]').click()
     cy.url().should('eq', 'https://zwift.com/events') // => true
@@ -152,7 +152,7 @@ context('Actions', () => {
     cy.get(':nth-child(3) > .select-wrapper > #filter-location').select('Morning')
     cy.get(':nth-child(3) > .select-wrapper > #filter-location').select('Morning').should('have.value', 'morning')
 
-    // Should find a 9am race for us
+    // Pick first available spin and call it good
     cy.get(':nth-child(2) > .listing-top > .listing-header > span').scrollIntoView().click()
   })
 

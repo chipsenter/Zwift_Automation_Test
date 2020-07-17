@@ -33,6 +33,7 @@ note: npx is included with npm > v5.2 or can be installed separately.
 npx cypress open ( I prefer this option )
 
 Also you can fire off the same tests from your terminal by running this command > npx cypress run
+
 example pic > https://www.dropbox.com/s/grz3uo2sb2729c1/Screenshot%202020-07-17%2014.10.49.png?dl=0
 
 (notice the videos folder in your project will be created and store all test runs so you can easily leave your computer and go for lunch while Cypress is banging on the test scenarios)

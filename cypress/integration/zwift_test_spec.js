@@ -1,7 +1,7 @@
 // <reference types="cypress" />
 
 context('Actions', () => {
-  beforeEach(() => {
+  before(() => {
     cy.visit('https://zwift.com')
   })
 
@@ -10,7 +10,7 @@ context('Actions', () => {
     cy.url().should('eq', 'https://zwift.com/') // => true
     cy.document().should('have.property', 'charset').and('eq', 'UTF-8')
     cy.title()
-    
+
     // Accept the cookies in the footer area
     cy.get('#truste-consent-button').click()
 
@@ -29,7 +29,7 @@ context('Actions', () => {
     // 1.Zwift icon
     cy.get('.znv-ghost-d-none > svg')
       .should('be.visible')
-    
+
     // 2.Get Started  
     cy.get('.znv-d-lg-flex > div > .znv-py-2_5')
       .should('be.visible')
@@ -49,11 +49,11 @@ context('Actions', () => {
     // 6.SHOP
     cy.get('.znv-px-lg-1_5 > .znv-d-lg-flex > [href="/shop"]')
       .should('be.visible')
-    
+
     // 6.EVENTS
     cy.get('.znv-d-lg-flex > [href="/events"]')
       .should('be.visible')
-    
+
     // 7.SUPPORT
     cy.get('.znv-d-lg-flex > [href="https://support.zwift.com/"]')
       .should('be.visible')
@@ -69,10 +69,10 @@ context('Actions', () => {
     // Oh. I don't understand that jibbiresh , let's move back to English settings
     cy.get('#znv-header-lang-dropdown').click()
     cy.get('#znv-header-lang-en-us-link > :nth-child(2) > .znv-mb-0_5').click()
-    
+
     // Let's move down to the next section of the page
     cy.wait(1000)
-    cy.scrollTo(0, 1600, { duration: 2000 }) 
+    cy.scrollTo(0, 1600, { duration: 2000 })
 
     //Verify H2 elements
     cy.contains('Your Goals').should('be.visible')
@@ -131,7 +131,9 @@ context('Actions', () => {
   })
 
   it('Validate Events page', () => {
-    
+
+    cy.visit('https://zwift.com')
+
     cy.get('.znv-d-lg-flex > [href="/events"]').click()
     cy.url().should('eq', 'https://zwift.com/events') // => true
     cy.document().should('have.property', 'charset').and('eq', 'UTF-8')
@@ -139,22 +141,118 @@ context('Actions', () => {
     // Accept the cookies in the footer area
     cy.get('#truste-consent-button').click()
 
-    // Let's pick my favo sport Cycling from the Dropdown
-    cy.get(':nth-child(1) > .select-wrapper > #filter-location').select('CYCLING')
-    cy.get(':nth-child(1) > .select-wrapper > #filter-location').select('CYCLING').should('have.value', 'CYCLING')    
-    
-
-    // I'm a solid A rider so let's select A and get those legs burning
-    cy.get(':nth-child(2) > .select-wrapper > #filter-location').select('A')
-    cy.get(':nth-child(2) > .select-wrapper > #filter-location').select('A').should('have.value', '1')
-
-    // I like to spin in the mornings so let's go ahead and sign up for the Morning races
-    cy.get(':nth-child(3) > .select-wrapper > #filter-location').select('Morning')
-    cy.get(':nth-child(3) > .select-wrapper > #filter-location').select('Morning').should('have.value', 'morning')
-
-    // Pick first available spin and call it good
-    cy.get(':nth-child(2) > .listing-top > .listing-header > span').scrollIntoView().click()
   })
 
+  const intensityMap = {
+    'A': 1,
+    'B': 2,
+    'C': 3,
+    'D': 4,
+    'E (Open)': 5
+  }
+    // The select elements dropdown picker (cycling, A,B,C,D,E Open , Morning,Afternoon, Evening, Night) 
+  const pick = (sport, intensity, startTime) => {
+
+    // Let's pick my favo sport Cycling from the Dropdown
+    cy.get(':nth-child(1) > .select-wrapper > #filter-location').select(sport)
+    cy.get(':nth-child(1) > .select-wrapper > #filter-location').select(sport).should('have.value', sport)
+
+    //  ===== Select Drop down Section ==== //
+    // I'm a solid A rider so let's select A and get those legs burning
+    cy.get(':nth-child(2) > .select-wrapper > #filter-location').select(intensity)
+    cy.get(':nth-child(2) > .select-wrapper > #filter-location').select(intensity).should('have.value', intensityMap[intensity])
+
+    // I like to spin in the mornings so let's go ahead and sign up for the Morning races
+    cy.get(':nth-child(3) > .select-wrapper > #filter-location').select(startTime)
+    cy.get(':nth-child(3) > .select-wrapper > #filter-location').select(startTime).should('have.value', startTime.toLowerCase())
+  }
+
+  const selectFirstListing = () => {
+    // Pick first available spin and call it good
+    cy.get(':nth-child(2) > .listing-top > .listing-header > span').scrollIntoView().click()
+
+    // Validate that NOT tab-listing is empty for workouts
+    cy.get('.tab-listing').each(listing => {
+      cy.wrap(listing).find('.header-title').invoke('text').should('not.to.be.empty')
+    })
+  }
+
+    // Negative test will look up events already completed and move on to another category to find a race
+  it('loop through filters and find combination where event series completed', () => {
+      // The select elements from the dropdown
+    const loop = (sport, intensity, startTime) => {
+
+      pick(sport, intensity, startTime)
+
+      cy.get('column').find('.tab-listing').then((tabListings) => {
+        cy.log('length: ' + tabListings.length)
+        cy.wrap(tabListings[0]).invoke('text').then(text => {
+          cy.log('text: ' + text)
+          if (text === 'Event series completed.') {
+            cy.log('found 0 listings')
+            // Screenshot if this message if we see a 0 listing and move on
+            cy.screenshot()
+          }
+          else {
+
+            if (intensity === 'A') {
+              intensity = 'B'
+            }
+            else if (intensity === 'B') {
+              intensity = 'C'
+            }
+            else if (intensity === 'C') {
+              intensity = 'D'
+            }
+            else if (intensity === 'D') {
+              intensity = 'E (Open)'
+            }
+            else {
+              intensity = 'A'
+              if (startTime === 'Morning') {
+                startTime = 'Afternoon'
+              }
+              if (startTime === 'Afternoon') {
+                startTime = 'Evening'
+              }
+              if (startTime === 'Evening') {
+                startTime = 'Night'
+              }
+              else {
+                startTime = 'Morning'
+                if (sport === 'CYCLING') {
+                  sport = 'RUNNING'
+                }
+                else return
+              }
+            }
+            loop(sport, intensity, startTime)
+          }
+        })
+      })
+
+    }
+
+    loop('CYCLING', 'A', 'Morning')
+  })
+
+  // Reuse my Const variable , code effiency right
+  it('should click through a listing', () => {
+
+    pick('CYCLING', 'A', 'Morning')
+
+    selectFirstListing()
+    // Let's wrap up with a little pic of the race you just got served ( pictures will be located in the left pane under Screenshots)
+    cy.get('column').scrollIntoView().screenshot()
+    
+  })
+
+  it('Last words to Zwift', () => {
+
+    cy.get('.znv-d-lg-flex > [href="https://support.zwift.com/"]').click()
+
+    cy.get('#searchInput').type('Hope you liked my test , I\'m pumped to hear back from you :) CYA', { delay: 100 })
+
+  })
 
 })
